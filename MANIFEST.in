@@ -1,0 +1,2 @@
+include flavours/ide.sh
+graft flavours/resources
