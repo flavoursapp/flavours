@@ -1,6 +1,7 @@
 import wx
 from wx import stc
 import wx.py.shell
+from wx.py import dispatcher
 
 # https://github.com/wxWidgets/Phoenix/blob/272990b1319ffb7ce99a359ee7d2d64a707e0428/wx/py/editwindow.py
 
@@ -21,7 +22,12 @@ class Shell(wx.py.shell.Shell):
     def __init__(self, *args, **kwargs):
         super(Shell, self).__init__(*args, **kwargs)
 
+        # self.Bind(wx.EVT_LEFT_UP, self.OnMouseUp)
+        # self.Bind(wx.EVT_LEFT_DOWN, self.OnMouseDown)
+        # self.Bind(wx.EVT_MOTION, self.OnMove)
+
         self.SetUseVerticalScrollBar(False)
+        self.SetEndAtLastLine(True)
 
         size = 12
 
@@ -65,3 +71,31 @@ class Shell(wx.py.shell.Shell):
         # Remove border on the left
         self.SetMarginType(1, 0)
         self.SetMarginWidth(1, 0)
+
+    # def OnMove(self, event):
+    #     self.MakePrompt()
+
+    def MakePrompt(self):
+        if ">>>" not in self.GetText().splitlines()[-1]:
+            self.SetCurrentPos(self.GetTextLength())
+            self.prompt()
+        self.SetFocus()
+
+    def ClearOrFocus(self):
+        dispatcher.send(signal="FontDefault")
+        if self.HasFocus():
+            if (
+                self.GetCurrentPos() == 0
+                or self.GetCurrentPos() == self.GetTextLength()
+                and ">>>" not in self.GetText().splitlines()[-1]
+            ):
+                self.MakePrompt()
+            else:
+                self.clear()
+                self.prompt()
+                self.setFocus()
+        else:
+            self.MakePrompt()
+
+    # def OnMouseDown(self, event):
+    #     pass
