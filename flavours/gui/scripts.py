@@ -1,57 +1,42 @@
-import time
-
-from watchdog.observers import Observer
-from watchdog.events import LoggingEventHandler
-
-
-class MyHandler(LoggingEventHandler):
-    def on_modified(self, event):
-        print(f"event type: {event.event_type} path : {event.src_path}")
-
-    def on_created(self, event):
-        print(f"event type: {event.event_type} path : {event.src_path}")
-
-    def on_deleted(self, event):
-        print(f"event type: {event.event_type} path : {event.src_path}")
+import os
+import wx
+import flavours
+from functools import partial
 
 
-def MakeScriptsManager(directory):
+def MakeScriptsMenu(event):
 
-    event_handler = MyHandler()
-    observer = Observer()
-    observer.schedule(event_handler, directory, recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    finally:
-        observer.stop()
-        observer.join()
+    path = os.path.join(flavours.working_directory, "scripts")
+
+    frame = flavours.app.frames[0]
+    menu = wx.Menu()
+    for root, dir, files in os.walk(path):
+        for file in files:
+            m_script = menu.Append(
+                wx.NewIdRef(count=1),
+                file,
+            )
+            frame.Bind(
+                wx.EVT_MENU,
+                partial(
+                    OnScriptExecute,
+                    file_path=os.path.join("scripts", file),
+                ),
+                m_script,
+            )
+
+    i = frame.menuBar.FindMenu("&Scripts")
+    frame.menuBar.Remove(i)
+    frame.menuBar.Insert(i, menu, "&Scripts")
 
 
-# class Handler(LoggingEventHandler):
-#     def on_modified(self, event):
-#         super().on_modified(event)
+def OnScriptExecute(event, file_path):
+    flavours.app.frames[0].shell.run(f'script("{file_path}")', prompt=False)
+    flavours.app.frames[0].shell.MakePrompt()
 
 
-# def MakeScriptHandler(directory):
-#     return
-
-
-class ScriptsManager(object):
-    def __init__(self, directory):
-
-        self.directory = directory
-
-        event_handler = MyHandler()
-        observer = Observer()
-        observer.schedule(event_handler, self.directory, recursive=True)
-        observer.start()
-        try:
-            while True:
-                time.sleep(1)
-        finally:
-            observer.stop()
-            observer.join()
-
-        print("a")
+def script(file_path):
+    if not file_path.startswith("/"):
+        file_path = os.path.join(flavours.working_directory, file_path)
+    with open(file_path, "r") as file:
+        exec(file.read())

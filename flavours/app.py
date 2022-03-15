@@ -3,18 +3,18 @@ import os
 import sys
 import flavours
 from flavours.gui.appframe import MakeFrame
-from flavours.gui.scripts import MakeScriptsManager
-import logging
+from flavours.gui.filesystem import Watchdog
+from flavours.gui.scripts import MakeScriptsMenu, script
+
 import traceback
-import threading
 
 try:
-    # # Path to open
+    # Path to open
     flavours.working_directory = os.path.abspath(sys.argv[-1])
     if not flavours.working_directory.startswith("/"):
         flavours.working_directory = os.path.abspath(os.path.join(os.getcwd(), flavours.working_directory))
 
-    # Icons
+    # Icon
     if flavours.MAC:
         from AppKit import NSImage, NSString, NSApp
 
@@ -28,22 +28,20 @@ try:
         )
         NSApp.setApplicationIconImage_(__icon)
 
-    # Logging
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    handler.setFormatter(formatter)
-    root.addHandler(handler)
+    # # Logging
+    # root = logging.getLogger()
+    # root.setLevel(logging.DEBUG)
+    # handler = logging.StreamHandler(sys.stdout)
+    # handler.setLevel(logging.DEBUG)
+    # formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    # handler.setFormatter(formatter)
+    # root.addHandler(handler)
 
-    # # Scripts Manager
-    # flavours.app.scripts_manager_thread = threading.Thread(
-    #     target=MakeScriptsManager, args=(os.path.join(flavours.working_directory, "scripts"),), daemon=True
-    # )
-    # flavours.app.scripts_manager_thread.start()
+    # Scripts Watchdog Manager
+    flavours.app.scripts_watchdog = Watchdog(os.path.join(flavours.working_directory, "scripts"), MakeScriptsMenu)
+    MakeScriptsMenu(MakeScriptsMenu)
 
     flavours.app.MainLoop()
-except:
-    sys.__stdout__.stdout = sys.__stdout__
-    traceback.print_exc()
+
+except Exception:
+    print(traceback.format_exc(), file=sys.__stdout__)

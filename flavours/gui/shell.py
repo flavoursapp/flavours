@@ -1,3 +1,4 @@
+import sys
 import wx
 from wx import stc
 import wx.py.shell
@@ -76,6 +77,9 @@ class Shell(wx.py.shell.Shell):
     #     self.MakePrompt()
 
     def MakePrompt(self):
+        wx.CallAfter(self.CallAfterMakePrompt)
+
+    def CallAfterMakePrompt(self):
         if ">>>" not in self.GetText().splitlines()[-1]:
             self.SetCurrentPos(self.GetTextLength())
             self.prompt()

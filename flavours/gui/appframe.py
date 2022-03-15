@@ -1,7 +1,7 @@
 import sys
 import wx
 import flavours
-from flavours.gui import fonts, shell, appframe
+from flavours.gui import fonts, shell, appframe, scripts
 from io import StringIO
 
 if flavours.MAC:
@@ -66,7 +66,7 @@ def MakeFrame():
     frame.shell.SetFocus()
 
     class ShellIO(StringIO):
-        def write(self, text):
+        def writeCallAfter(self, text):
             frame.shell.SetCurrentPos(frame.shell.GetTextLength())
             if frame.shell.GetText()[-1] != "\n":
                 frame.shell.write("\n")
@@ -74,6 +74,9 @@ def MakeFrame():
             if frame.shell.GetText()[-1] == "\n":
                 frame.shell.SetText(frame.shell.GetText()[:-1])
             frame.shell.ScrollToEnd()
+
+        def write(self, text):
+            wx.CallAfter(self.writeCallAfter, text)
 
     sys.stdout = ShellIO()
     # frame.shell.redirectStderr(True)
@@ -87,7 +90,7 @@ class AppFrame(wx.Frame):
 
     def SetMenus(self):
 
-        menuBar = wx.MenuBar()
+        self.menuBar = wx.MenuBar()
 
         menu = wx.Menu()
         if flavours.MAC:
@@ -102,7 +105,7 @@ class AppFrame(wx.Frame):
             "Get Flavours",
         )
         self.Bind(wx.EVT_MENU, self.OnGetFlavours, m_get_flavours)
-        menuBar.Append(menu, "&File")
+        self.menuBar.Append(menu, "&File")
 
         # EDIT
         editMenu = wx.Menu()
@@ -112,7 +115,7 @@ class AppFrame(wx.Frame):
         m_copy = editMenu.Append(wx.ID_COPY, "Copy\tCtrl-C")
         m_cut = editMenu.Append(wx.ID_CUT, "Cut\tCtrl-X")
         m_paste = editMenu.Append(wx.ID_PASTE, "Paste\tCtrl-V")
-        menuBar.Append(editMenu, "&Edit")
+        self.menuBar.Append(editMenu, "&Edit")
         self.Bind(wx.EVT_MENU, self.OnSelectAll, m_select_all)
         self.Bind(wx.EVT_MENU, self.OnCopy, m_copy)
         self.Bind(wx.EVT_MENU, self.OnPaste, m_paste)
@@ -130,9 +133,16 @@ class AppFrame(wx.Frame):
         #     "&Print\tCtrl-P",
         # )
         # self.Bind(wx.EVT_MENU, self.OnShellPrint, m_shell_print)
-        menuBar.Append(menu, "&Shell")
+        self.menuBar.Append(menu, "&Shell")
 
-        self.SetMenuBar(menuBar)
+        # SCRIPTS MENU
+        self.scripts_menu = wx.Menu()
+        self.menuBar.Append(self.scripts_menu, "&Scripts")
+
+        self.SetMenuBar(self.menuBar)
+
+    def print(self, text):
+        print(text)
 
     def OnQuit(self, event, withExitCode=None):
         self.Destroy()
