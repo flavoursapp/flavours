@@ -1,5 +1,84 @@
+import sys
 import wx
 import flavours
+from flavours.gui import fonts, shell, appframe
+from io import StringIO
+
+if flavours.MAC:
+    from AppKit import (
+        NSApp,
+        NSView,
+        NSPoint,
+        NSMakeRect,
+        NSToolbar,
+        # NSProcessInfo,
+        # NSString,
+        NSLeftMouseDraggedMask,
+        NSLeftMouseUpMask,
+        NSScreen,
+        NSLeftMouseUp,
+    )
+
+
+def MakeFrame():
+
+    # Fonts
+    MONO_FONT = fonts.font("IBM Plex Mono", "Regular")
+    MONO_FONT_BOLD = fonts.font("IBM Plex Mono", "Bold")
+
+    # Main Window
+    frame = appframe.AppFrame(None, title="wxPython Frame", size=(1000, 800))
+    frame.SetFont(MONO_FONT)
+
+    # Window content
+    panel = wx.Panel(frame)
+    panel.SetBackgroundColour("#ffffff")
+    panel.SetFont(MONO_FONT)
+
+    main_panel = wx.Panel(panel)
+    # main_panel.SetBackgroundColour("#000000")  # black
+    toolbar_panel = wx.Panel(panel)
+    # toolbar_panel.SetBackgroundColour("#FF0000")  # red
+    main_horizontal_box = wx.BoxSizer(wx.HORIZONTAL)
+    main_horizontal_box.Add(main_panel, wx.ID_ANY, wx.EXPAND | wx.ALL, 0)
+    main_horizontal_box.Add(toolbar_panel, wx.ID_ANY, wx.EXPAND | wx.ALL, 20)
+
+    toolbar_box = wx.BoxSizer(wx.VERTICAL)
+    upper_toolbar_panel = wx.Panel(toolbar_panel)
+    # upper_toolbar_panel.SetBackgroundColour("#00FF00")  # green
+    lower_toolbar_panel = wx.Panel(toolbar_panel)
+    # lower_toolbar_panel.SetBackgroundColour("#0000FF")  # blue
+    toolbar_box.Add(upper_toolbar_panel, wx.ID_ANY, wx.EXPAND | wx.ALL, 0)
+    toolbar_box.Add(lower_toolbar_panel, wx.ID_ANY, wx.EXPAND | wx.TOP, 20)
+
+    shell_box = wx.BoxSizer(wx.VERTICAL)
+    frame.shell = shell.Shell(lower_toolbar_panel)
+    shell_box.Add(frame.shell, wx.ID_ANY, wx.EXPAND | wx.ALL, 0)
+
+    toolbar_panel.SetSizer(toolbar_box)
+    lower_toolbar_panel.SetSizer(shell_box)
+
+    panel.SetSizer(main_horizontal_box)
+
+    frame.Show(True)
+    frame.SetMenus()
+    frame.SetStyle()
+    frame.shell.SetFocus()
+
+    class ShellIO(StringIO):
+        def write(self, text):
+            frame.shell.SetCurrentPos(frame.shell.GetTextLength())
+            if frame.shell.GetText()[-1] != "\n":
+                frame.shell.write("\n")
+            frame.shell.write(text)
+            if frame.shell.GetText()[-1] == "\n":
+                frame.shell.SetText(frame.shell.GetText()[:-1])
+            frame.shell.ScrollToEnd()
+
+    sys.stdout = ShellIO()
+    # frame.shell.redirectStderr(True)
+
+    return frame
 
 
 class AppFrame(wx.Frame):
@@ -102,30 +181,8 @@ class AppFrame(wx.Frame):
     def SetStyle(self):
         # Window Styling
         if flavours.MAC:
-            from AppKit import (
-                NSApp,
-                NSView,
-                NSPoint,
-                NSMakeRect,
-                NSToolbar,
-                NSProcessInfo,
-                NSString,
-            )
-
-            w = NSApp().mainWindow()
-            w.setMovable_(False)
-
-            from AppKit import (
-                NSLeftMouseDraggedMask,
-                NSLeftMouseUpMask,
-                NSScreen,
-                NSLeftMouseUp,
-            )
 
             class MyView(NSView):
-                # def mouseDragged_(self, event):
-                # 	event.window().setFrameOrigin_(NSPoint(event.window().frame().origin.x + event.deltaX(), event.window().frame().origin.y - event.deltaY()))
-
                 def mouseDown_(self, event):
 
                     _initialLocation = event.locationInWindow()
@@ -166,21 +223,11 @@ class AppFrame(wx.Frame):
                         )
                     )
 
-                # def drawRect_(self, rect):
-                # 	NSColor.yellowColor().set()
-                # 	NSRectFill(rect)
+            w = NSApp().mainWindow()
+            w.setMovable_(False)
 
             self.dragView = MyView.alloc().initWithFrame_(NSMakeRect(0, 0, self.GetSize()[0], 40))
             w.contentView().addSubview_(self.dragView)
-
-            # self.javaScript("$('#sidebar').css('padding-top', '32px');")
-            # self.SetTitle("Flavours")
-            # NSProcessInfo.alloc().init().setProcessName_(NSString.alloc().initWithString_("Flavours"))
-            # menu = NSApp.mainMenu()
-            # menu.setTitle_("Flavours")
-            # submenu = menu.itemAtIndex_(0)
-            # submenu.setTitle_(NSString.alloc().initWithString_("Flavours"))
-            # submenu.setTitle_("Flavours")
 
             w.setStyleMask_(1 << 0 | 1 << 1 | 1 << 2 | 1 << 3 | 1 << 15)
             w.setTitlebarAppearsTransparent_(1)

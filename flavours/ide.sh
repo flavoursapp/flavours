@@ -20,7 +20,7 @@ fi
 python3 `python3 -c "import flavours; import os; print(os.path.dirname(flavours.__file__))"`/hack.py change
 
 # run IDE
-python3 `python3 -c "import flavours; import os; print(os.path.dirname(flavours.__file__))"`/app.py
+python3 `python3 -c "import flavours; import os; print(os.path.dirname(flavours.__file__))"`/app.py $1
 
 # modify Python’s Info.plist
 python3 `python3 -c "import flavours; import os; print(os.path.dirname(flavours.__file__))"`/hack.py revert
