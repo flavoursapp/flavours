@@ -4,7 +4,7 @@ import sys
 import flavours
 from flavours.gui.appframe import MakeFrame
 from flavours.gui.filesystem import Watchdog
-from flavours.gui.scripts import MakeScriptsMenu, script
+from flavours.gui.scripts import MakeScriptsMenu, run
 
 import traceback
 

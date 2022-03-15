@@ -2,6 +2,7 @@ import os
 import wx
 import flavours
 from functools import partial
+import threading
 
 
 def MakeScriptsMenu(event):
@@ -31,12 +32,17 @@ def MakeScriptsMenu(event):
 
 
 def OnScriptExecute(event, file_path):
-    flavours.app.frames[0].shell.run(f'script("{file_path}")', prompt=False)
+    flavours.app.frames[0].shell.run(f'run("{file_path}")', prompt=False)
     flavours.app.frames[0].shell.MakePrompt()
 
 
-def script(file_path):
+def run(file_path):
     if not file_path.startswith("/"):
         file_path = os.path.join(flavours.working_directory, file_path)
     with open(file_path, "r") as file:
+
+        # TODO
+        # Make this run from a thread so that the GUI shell updates on prints
+        # t = threading.Thread(target=exec, args=(file.read(),))
+        # t.start()
         exec(file.read())

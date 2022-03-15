@@ -86,6 +86,9 @@ class Shell(wx.py.shell.Shell):
         self.SetFocus()
 
     def ClearOrFocus(self):
+        wx.CallAfter(self.CallAfterClearOrFocus)
+
+    def CallAfterClearOrFocus(self):
         dispatcher.send(signal="FontDefault")
         if self.HasFocus():
             if (
@@ -100,6 +103,3 @@ class Shell(wx.py.shell.Shell):
                 self.setFocus()
         else:
             self.MakePrompt()
-
-    # def OnMouseDown(self, event):
-    #     pass

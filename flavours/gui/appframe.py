@@ -79,7 +79,8 @@ def MakeFrame():
             wx.CallAfter(self.writeCallAfter, text)
 
     sys.stdout = ShellIO()
-    # frame.shell.redirectStderr(True)
+    # frame.shell.redirectStdout(True)
+    frame.shell.redirectStderr(True)
 
     return frame
 
